@@ -1,27 +1,34 @@
 import createDataContext from "./createDataContext";
+import jsonServer from "../api/jsonServer";
 
 
 const blogReducer = (state, action) => {
     switch (action.type) {
+        case 'get_blog':
+            return action.payload;
         case 'edit_blog':
             return state.map((blogPost) => {
                 return blogPost.id === action.payload.id ? action.payload : blogPost
             });
         case 'delete_blog':
             return state.filter((blogPost) => blogPost.id !== action.payload);
-        case 'Add_blog':
-            return [...state,
-                {   id: Math.floor(Math.random() * 9999),
-                    title: action.payload.title,
-                    content: action.payload.content
-                }];
         default:
             return state;
             }
 };
+
+const getBlogPosts = dispatch => {
+    return async () => {
+        const response = await jsonServer.get('/blogposts');
+        //response.data === our blogposts
+
+        dispatch({type: 'get_blog', payload: response.data});
+    }
+};
+
 const addBlog = (dispatch) => {
-    return (title, content, callback) => {
-        dispatch({type: 'Add_blog', payload: {title, content}});
+    return async (title, content, callback) => {
+        await jsonServer.post('/blogposts', {title, content});
         callback();
     };
 };
@@ -41,5 +48,5 @@ const editBlog = (dispatch) => {
 
 
 export const { Context, Provider} = createDataContext(blogReducer,
-    {addBlog, deleteBlog, editBlog},
-    [{title: 'TEST POST', content: 'TEST CONTENT', id: 1}]);
+    {addBlog, deleteBlog, editBlog, getBlogPosts},
+    []);
